@@ -11,7 +11,8 @@ defmodule BankrWeb.UserView do
   end
 
   def render("user.json", %{user: user}) do
-    %{id: user.id,
+    %{
+      id: user.id,
       name: user.name,
       email: user.email,
       cpf: user.cpf,
@@ -20,6 +21,7 @@ defmodule BankrWeb.UserView do
       city: user.city,
       state: user.state,
       country: user.country,
-      referral_code: user.referral_code}
+      referral_code: user.referral_code
+    }
   end
 end

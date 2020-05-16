@@ -1,80 +1,92 @@
 defmodule Bankr.AccountsTest do
   use Bankr.DataCase
+  import Brcpfcnpj, only: [cpf_generate: 0]
+  import Bcrypt
 
   alias Bankr.Accounts
 
   describe "users" do
     alias Bankr.Accounts.User
 
-    @valid_attrs %{birth_date: ~D[2010-04-17], city: "some city", country: "some country", cpf: "some cpf", email: "some email", gender: "some gender", name: "some name", referral_code: "some referral_code", state: "some state"}
-    @update_attrs %{birth_date: ~D[2011-05-18], city: "some updated city", country: "some updated country", cpf: "some updated cpf", email: "some updated email", gender: "some updated gender", name: "some updated name", referral_code: "some updated referral_code", state: "some updated state"}
-    @invalid_attrs %{birth_date: nil, city: nil, country: nil, cpf: nil, email: nil, gender: nil, name: nil, referral_code: nil, state: nil}
+    @valid_attrs %{
+      birth_date: ~D[2010-04-17],
+      city: "São Paulo",
+      country: "Brasil",
+      cpf: cpf_generate(),
+      email: "valid@email.com",
+      gender: "male",
+      name: "A Name",
+      referral_code: "some referral_code",
+      state: "SP"
+    }
+    @update_attrs %{
+      birth_date: ~D[2011-05-18],
+      city: "Los Angeles",
+      country: "Estados Unidos",
+      cpf: cpf_generate(),
+      email: "valid2@email.com",
+      gender: "female",
+      name: "Another Name",
+      referral_code: "some updated referral_code",
+      state: "California"
+    }
 
     def user_fixture(attrs \\ %{}) do
       {:ok, user} =
         attrs
         |> Enum.into(@valid_attrs)
-        |> Accounts.create_user()
+        |> Accounts.create_or_update_user()
 
       user
     end
 
-    test "list_users/0 returns all users" do
-      user = user_fixture()
-      assert Accounts.list_users() == [user]
+    test "create_or_update_user/1 with valid data creates a user" do
+      assert {:ok, %User{} = expected} = Accounts.create_or_update_user(@valid_attrs)
+
+      assert expected.birth_date ==
+               check_pass(expected, @valid_attrs.birth_date, hash_key: :birth_date)
+
+      assert expected.city == @valid_attrs.city
+      assert expected.country == @valid_attrs.country
+      assert expected.cpf == check_pass(expected, @valid_attrs.cpf, hash_key: :cpf)
+      assert expected.email == check_pass(expected, @valid_attrs.email, hash_key: :email)
+      assert expected.gender == @valid_attrs.gender
+      assert expected.name == check_pass(expected, @valid_attrs.name, hash_key: :name)
+      assert expected.referral_code == @valid_attrs.referral_code
+      assert expected.state == @valid_attrs.state
     end
 
-    test "get_user!/1 returns the user with given id" do
-      user = user_fixture()
-      assert Accounts.get_user!(user.id) == user
+    test "create_or_update_user/1 with invalid email returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} =
+               Accounts.create_or_update_user(%{"cpf" => cpf_generate()})
     end
 
-    test "create_user/1 with valid data creates a user" do
-      assert {:ok, %User{} = user} = Accounts.create_user(@valid_attrs)
-      assert user.birth_date == ~D[2010-04-17]
-      assert user.city == "some city"
-      assert user.country == "some country"
-      assert user.cpf == "some cpf"
-      assert user.email == "some email"
-      assert user.gender == "some gender"
-      assert user.name == "some name"
-      assert user.referral_code == "some referral_code"
-      assert user.state == "some state"
+    test "create_or_update_user/1 with invalid cpf returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Accounts.create_or_update_user(%{"cpf" => "123"})
     end
 
-    test "create_user/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Accounts.create_user(@invalid_attrs)
+    test "create_or_update_user/1 with invalid gender returns error changeset" do
+      assert {:error,
+              %Ecto.Changeset{} =
+                Accounts.create_or_update_user(%{"cpf" => cpf_generate(), "gender" => "invalid"})}
     end
 
-    test "update_user/2 with valid data updates the user" do
-      user = user_fixture()
-      assert {:ok, %User{} = user} = Accounts.update_user(user, @update_attrs)
-      assert user.birth_date == ~D[2011-05-18]
-      assert user.city == "some updated city"
-      assert user.country == "some updated country"
-      assert user.cpf == "some updated cpf"
-      assert user.email == "some updated email"
-      assert user.gender == "some updated gender"
-      assert user.name == "some updated name"
-      assert user.referral_code == "some updated referral_code"
-      assert user.state == "some updated state"
+    test "create_or_update_user/1 with valid data completes the registration when cpf is already registered" do
+      cpf = cpf_generate()
+      email = "some@email.com"
+      assert {:ok, _} = Accounts.create_or_update_user(%{"cpf" => cpf})
+
+      assert {:ok, %User{} = expected} =
+               Accounts.create_or_update_user(%{"cpf" => cpf, "email" => email})
+
+      assert expected.email == email
     end
 
-    test "update_user/2 with invalid data returns error changeset" do
-      user = user_fixture()
-      assert {:error, %Ecto.Changeset{}} = Accounts.update_user(user, @invalid_attrs)
-      assert user == Accounts.get_user!(user.id)
-    end
-
+    @tag :skip
     test "delete_user/1 deletes the user" do
       user = user_fixture()
       assert {:ok, %User{}} = Accounts.delete_user(user)
       assert_raise Ecto.NoResultsError, fn -> Accounts.get_user!(user.id) end
-    end
-
-    test "change_user/1 returns a user changeset" do
-      user = user_fixture()
-      assert %Ecto.Changeset{} = Accounts.change_user(user)
     end
   end
 end

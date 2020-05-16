@@ -15,6 +15,5 @@ defmodule Bankr.Repo.Migrations.CreateUsers do
 
       timestamps()
     end
-
   end
 end

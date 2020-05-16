@@ -19,7 +19,27 @@ defmodule Bankr.Accounts.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:name, :email, :cpf, :birth_date, :gender, :city, :state, :country, :referral_code])
-    |> validate_required([:name, :email, :cpf, :birth_date, :gender, :city, :state, :country, :referral_code])
+    |> cast(attrs, [
+      :name,
+      :email,
+      :cpf,
+      :birth_date,
+      :gender,
+      :city,
+      :state,
+      :country,
+      :referral_code
+    ])
+    |> validate_required([
+      :name,
+      :email,
+      :cpf,
+      :birth_date,
+      :gender,
+      :city,
+      :state,
+      :country,
+      :referral_code
+    ])
   end
 end

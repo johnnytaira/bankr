@@ -26,7 +26,17 @@ defmodule BankrWeb.UserControllerTest do
     referral_code: "some updated referral_code",
     state: "some updated state"
   }
-  @invalid_attrs %{birth_date: nil, city: nil, country: nil, cpf: nil, email: nil, gender: nil, name: nil, referral_code: nil, state: nil}
+  @invalid_attrs %{
+    birth_date: nil,
+    city: nil,
+    country: nil,
+    cpf: nil,
+    email: nil,
+    gender: nil,
+    name: nil,
+    referral_code: nil,
+    state: nil
+  }
 
   def fixture(:user) do
     {:ok, user} = Accounts.create_user(@create_attrs)
