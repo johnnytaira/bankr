@@ -6,12 +6,11 @@ defmodule Bankr.Repo.Migrations.CreateUsers do
       add :name, :string
       add :email, :string
       add :cpf, :string
-      add :birth_date, :date
+      add :birth_date, :string
       add :gender, :string
       add :city, :string
       add :state, :string
       add :country, :string
-      add :referral_code, :string
 
       timestamps()
     end

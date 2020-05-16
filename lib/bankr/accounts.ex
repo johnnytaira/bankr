@@ -38,39 +38,24 @@ defmodule Bankr.Accounts do
   def get_user!(id), do: Repo.get!(User, id)
 
   @doc """
-  Creates a user.
+  Cria um usuário, caso o CPF não esteja cadastrado. Se o CPF não estiver cadastrado, atualiza.
 
   ## Examples
 
-      iex> create_user(%{field: value})
+      iex> create_or_update_user(%{"cpf" => Cpfcnpj.generate()})
       {:ok, %User{}}
 
-      iex> create_user(%{field: bad_value})
+      iex> create_or_update_user(%{"cpf" => "001203"})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_user(attrs \\ %{}) do
-    %User{}
+  def create_or_update_user(%{"cpf" => plain_cpf} = attrs) do
+    case get_user_by_cpf(plain_cpf) do
+      nil -> %User{}
+      user -> user
+    end
     |> User.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  @doc """
-  Updates a user.
-
-  ## Examples
-
-      iex> update_user(user, %{field: new_value})
-      {:ok, %User{}}
-
-      iex> update_user(user, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_user(%User{} = user, attrs) do
-    user
-    |> User.changeset(attrs)
-    |> Repo.update()
+    |> Repo.insert_or_update()
   end
 
   @doc """
@@ -89,16 +74,9 @@ defmodule Bankr.Accounts do
     Repo.delete(user)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking user changes.
-
-  ## Examples
-
-      iex> change_user(user)
-      %Ecto.Changeset{source: %User{}}
-
-  """
-  def change_user(%User{} = user) do
-    User.changeset(user, %{})
+  @spec get_user_by_cpf(String.t()) :: struct | nil
+  defp get_user_by_cpf(plain_cpf) do
+    hash_cpf = Bcrypt.hash_pwd_salt(plain_cpf)
+    Repo.get_by(User, cpf: hash_cpf)
   end
 end

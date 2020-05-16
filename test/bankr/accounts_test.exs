@@ -9,26 +9,24 @@ defmodule Bankr.AccountsTest do
     alias Bankr.Accounts.User
 
     @valid_attrs %{
-      birth_date: ~D[2010-04-17],
-      city: "São Paulo",
-      country: "Brasil",
-      cpf: cpf_generate(),
-      email: "valid@email.com",
-      gender: "male",
-      name: "A Name",
-      referral_code: "some referral_code",
-      state: "SP"
+      "birth_date" => "2010-04-17",
+      "city" => "São Paulo",
+      "country" => "Brasil",
+      "cpf" => cpf_generate(),
+      "email" => "valid@email.com",
+      "gender" => "male",
+      "name" => "A Name",
+      "state" => "SP"
     }
     @update_attrs %{
-      birth_date: ~D[2011-05-18],
-      city: "Los Angeles",
-      country: "Estados Unidos",
-      cpf: cpf_generate(),
-      email: "valid2@email.com",
-      gender: "female",
-      name: "Another Name",
-      referral_code: "some updated referral_code",
-      state: "California"
+      "birth_date" => "2011-05-18",
+      "city" => "Los Angeles",
+      "country" => "Estados Unidos",
+      "cpf" => cpf_generate(),
+      "email" => "valid2@email.com",
+      "gender" => "female",
+      "name" => "Another Name",
+      "state" => "California"
     }
 
     def user_fixture(attrs \\ %{}) do
@@ -43,17 +41,16 @@ defmodule Bankr.AccountsTest do
     test "create_or_update_user/1 with valid data creates a user" do
       assert {:ok, %User{} = expected} = Accounts.create_or_update_user(@valid_attrs)
 
-      assert expected.birth_date ==
-               check_pass(expected, @valid_attrs.birth_date, hash_key: :birth_date)
+      assert verify_pass(@valid_attrs["birth_date"], expected.birth_date)
+      assert verify_pass(@valid_attrs["cpf"], expected.cpf)
+      assert verify_pass(@valid_attrs["email"], expected.email)
+      assert verify_pass(@valid_attrs["name"], expected.name)
 
-      assert expected.city == @valid_attrs.city
-      assert expected.country == @valid_attrs.country
-      assert expected.cpf == check_pass(expected, @valid_attrs.cpf, hash_key: :cpf)
-      assert expected.email == check_pass(expected, @valid_attrs.email, hash_key: :email)
-      assert expected.gender == @valid_attrs.gender
-      assert expected.name == check_pass(expected, @valid_attrs.name, hash_key: :name)
-      assert expected.referral_code == @valid_attrs.referral_code
-      assert expected.state == @valid_attrs.state
+      assert expected.city == @valid_attrs["city"]
+      assert expected.country == @valid_attrs["country"]
+      assert expected.gender == @valid_attrs["gender"]
+      assert expected.referral_code == @valid_attrs["referral_code"]
+      assert expected.state == @valid_attrs["state"]
     end
 
     test "create_or_update_user/1 with invalid email returns error changeset" do
@@ -66,9 +63,8 @@ defmodule Bankr.AccountsTest do
     end
 
     test "create_or_update_user/1 with invalid gender returns error changeset" do
-      assert {:error,
-              %Ecto.Changeset{} =
-                Accounts.create_or_update_user(%{"cpf" => cpf_generate(), "gender" => "invalid"})}
+      assert {:error, %Ecto.Changeset{}} =
+               Accounts.create_or_update_user(%{"cpf" => cpf_generate(), "gender" => "invalid"})
     end
 
     test "create_or_update_user/1 with valid data completes the registration when cpf is already registered" do
