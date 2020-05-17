@@ -25,22 +25,32 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-# Configures Guardian
-config :bankr, BankrWeb.Guardian,
+#Configures Guardian
+config :bankr, Bankr.Guardian,
   issuer: "bankr",
   secret_key: "iVsGaOgmEgnlN0ZIlU2xiMmTNYJngqolAzc928Y4wWcmyYXgXGjzovDEr3lP6uSk"
 
+  # run shell command to "source .env" to load the environment variables.
+try do                                     # wrap in "try do"
+File.stream!("./.env")                   # in case .env file does not exist.
+  |> Stream.map(&String.trim_trailing/1) # remove excess whitespace
+  |> Enum.each(fn line -> line           # loop through each line
+    |> String.replace("export ", "")     # remove "export" from line
+    |> String.split("=", parts: 2)       # split on *first* "=" (equals sign)
+    |> Enum.reduce(fn(value, key) ->     # stackoverflow.com/q/33055834/1148249
+      System.put_env(key, value)         # set each environment variable
+    end)
+  end)
+rescue
+_ -> IO.puts "no .env file found!"
+end
+
 # Set the Encryption Keys as an "Application Variable" accessible in aes.ex
 config :bankr, Bankr.AES,
-  # get the ENCRYPTION_KEYS env variable
-  keys:
-    System.get_env("ENCRYPTION_KEYS")
-    # remove single-quotes around key list in .env
-    |> String.replace("'", "")
-    # split the CSV list of keys
-    |> String.split(",")
-    # decode the key.
-    |> Enum.map(fn key -> :base64.decode(key) end)
+  keys: System.get_env("ENCRYPTION_KEYS") # get the ENCRYPTION_KEYS env variable
+    |> String.replace("'", "")  # remove single-quotes around key list in .env
+    |> String.split(",")        # split the CSV list of keys
+    |> Enum.map(fn key -> :base64.decode(key) end) # decode the key.
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

@@ -31,7 +31,10 @@ defmodule BankrWeb.SessionControllerTest do
           "password" => @create_attrs["password"]
         })
 
-      assert json_response(conn, 200)
+      assert expected = json_response(conn, 200)
+      assert expected["status"] == "ok"
+      assert expected["data"]["email"] == @create_attrs["email"]
+      assert is_binary(expected["data"]["token"])
     end
   end
 

@@ -5,8 +5,7 @@ defmodule Bankr.Guardian do
   use Guardian, otp_app: :bankr
 
   def subject_for_token(resource, _claims) do
-    IO.inspect "passa no subject_for_token"
-    IO.inspect resource
+
     sub = to_string(resource.id)
     {:ok, sub}
   end
@@ -16,8 +15,6 @@ defmodule Bankr.Guardian do
   end
 
   def resource_from_claims(claims) do
-    IO.inspect "passa no resource_from_claims"
-
     id = claims["sub"]
     resource = Bankr.Accounts.get_user!(id)
     {:ok, resource}
