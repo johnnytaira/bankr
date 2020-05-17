@@ -43,7 +43,8 @@ defmodule Bankr.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:bcrypt_elixir, "~> 2.2.0"},
       {:brcpfcnpj, "~> 0.2.0"},
-      {:entropy_string, "~> 1.3"}
+      {:entropy_string, "~> 1.3"},
+      {:credo, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
 

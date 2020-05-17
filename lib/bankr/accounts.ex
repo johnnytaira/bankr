@@ -4,9 +4,9 @@ defmodule Bankr.Accounts do
   """
 
   import Ecto.Query, warn: false
+  alias Bankr.Accounts.User
   alias Bankr.Repo
   alias Ecto.Multi
-  alias Bankr.Accounts.User
 
   @doc """
   Returns the list of users.
@@ -57,7 +57,9 @@ defmodule Bankr.Accounts do
 
   """
   def create_or_update_user(%{"cpf" => plain_cpf} = attrs) do
-    changeset = user_changeset_by_cpf(plain_cpf, attrs)
+    changeset =
+      user_changeset_by_cpf(plain_cpf, attrs)
+      |> check_valid_rc(attrs)
 
     Multi.new()
     |> register_user(changeset)
@@ -80,17 +82,21 @@ defmodule Bankr.Accounts do
     Repo.get_by(User, cpf: hash_cpf)
   end
 
-  defp insert_indication(multi, user, %{"referral_code" => referral_code} = attrs) do
-    valid_indications = from u in User, where: u.referral_code == ^referral_code, select: count(u)
+  defp check_valid_rc(changeset, %{"referral_code" => generated_rc}) do
+    valid_indications = from u in User, where: u.generated_rc == ^generated_rc, select: count(u)
 
     case Repo.all(valid_indications) do
-      [0] -> multi
-      _ -> multi |> Multi.insert(:insert_indication, User.indication_changeset(user, attrs))
+      [0] -> Ecto.Changeset.add_error(changeset, :indication_rc, "invalid")
+      _ -> changeset
     end
   end
 
-  defp insert_indication(multi, _user, _attrs) do
-    multi
+  defp check_valid_rc(changeset, _attrs) do
+    changeset
+  end
+
+  defp insert_indication(multi, user, attrs) do
+    Multi.insert(multi, :insert_indication, User.indication_changeset(user, attrs))
   end
 
   defp register_user(multi, changeset) do

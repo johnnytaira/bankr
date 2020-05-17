@@ -27,9 +27,9 @@ defmodule BankrWeb.UserControllerTest do
 
       conn = get(conn, Routes.user_path(conn, :show, id))
 
-      assert %{"data" => %{"referral_code" => referral_code}} = json_response(conn, 200)
-      assert String.length(referral_code) == 8
-      assert is_binary(referral_code)
+      assert %{"data" => %{"generated_rc" => generated_rc}} = json_response(conn, 200)
+      assert String.length(generated_rc) == 8
+      assert is_binary(generated_rc)
     end
 
     test "renders errors when data is invalid", %{conn: conn} do

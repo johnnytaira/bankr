@@ -10,8 +10,14 @@ defmodule BankrWeb.UserController do
   Endpoint de registro do usuário. Para fazer um cadastro de usuário, é preciso informar pelo menos o número do CPF.
   Número do CPF precisa ser válido.
   Outros campos não são obrigatórios mas o usuário só ganhará o código de indicação caso realizar o cadastro completo.
+  Caso o cadastro esteja completo, um referral_code é gerado e inserido na coluna `generated_rc`
   `email` deve vir com formato something@anything.suf
+
+  `birth_date` é um string, que deve respeitar o formato convencionado pela IS0 8601 ("aaaa-mm-dd")
+
   `gender` permitidos: "male", "female", "other" ou "prefer_not_to_say"
+
+  O campo `referral_code`, se preenchido, insere um registro na coluna `indication_rc` caso seja um referral_code existente. Se não for, um erro é retornado.
 
   ## Exemplo de payload válido:
   ```

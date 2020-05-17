@@ -1,6 +1,6 @@
 defmodule Bankr.ReferralGen do
   @moduledoc """
-  Gera uma referral_code, usando a biblioteca `EntropyString`.
+  Gera uma generated_rc, usando a biblioteca `EntropyString`.
   A string conterá 8 caracteres.
 
   """

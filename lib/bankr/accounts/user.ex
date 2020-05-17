@@ -1,10 +1,15 @@
 defmodule Bankr.Accounts.User do
+  @moduledoc """
+  Model do usuário a ser registrado.
+  As validações seguem os formatos convencionados em BankrWeb.UserController
+  """
   use Ecto.Schema
   import Ecto.Changeset
   import Cpfcnpj, only: [valid?: 1]
   alias Bankr.Accounts.User
 
-  @auto_generated_keys ~w(id registration_status referral_code indication_referral_code __meta__ __struct__ inserted_at updated_at)a
+  # Remove colunas que não são obrigatórias para garantir o cadastro completo.
+  @auto_generated_keys ~w(id registration_status generated_rc indication_rc __meta__ __struct__ inserted_at updated_at)a
   @valid_genders ~w(male female other prefer_not_to_say)
 
   schema "users" do
@@ -17,21 +22,25 @@ defmodule Bankr.Accounts.User do
     field :name, :string
     field :state, :string
     field :registration_status, :string, default: "pendente"
-    field :referral_code, :string
-    field :indication_referral_code, :string
+    field :generated_rc, :string
+    field :indication_rc, :string
 
     timestamps()
   end
 
   @doc false
-
-  def indication_changeset(user, %{"referral_code" => referral_code}) do
+  def indication_changeset(user, %{"referral_code" => generated_rc}) do
     user
-    |> cast(%{"indication_referral_code" => referral_code}, [:indication_referral_code])
+    |> cast(%{"indication_rc" => generated_rc}, [:indication_rc])
+  end
+
+  def indication_changeset(user, _attrs) do
+    user
   end
 
   @required ~w(cpf)a
   @optional ~w(name email birth_date gender city state country registration_status)a
+  @doc false
   def changeset(user, attrs) do
     user
     |> cast(attrs, @optional ++ @required)
@@ -75,7 +84,10 @@ defmodule Bankr.Accounts.User do
   defp put_birth_date(
          %Ecto.Changeset{valid?: true, changes: %{birth_date: birth_date}} = changeset
        ) do
-    change(changeset, birth_date: Bcrypt.hash_pwd_salt(birth_date))
+    case Date.from_iso8601(birth_date) do
+      {:ok, _date} -> change(changeset, birth_date: Bcrypt.hash_pwd_salt(birth_date))
+      {:error, _reason} -> add_error(changeset, :birth_date, "invalid_format")
+    end
   end
 
   defp put_birth_date(changeset), do: changeset
@@ -100,18 +112,18 @@ defmodule Bankr.Accounts.User do
       |> Map.values()
       |> Enum.filter(&(is_nil(&1) == false))
 
-    cond do
-      length(filled_fields) == length(expected_user_keys()) ->
+    case length(filled_fields) == length(expected_user_keys()) do
+      true ->
         change(changeset, registration_status: "completo")
 
-      true ->
+      false ->
         changeset
     end
   end
 
   defp put_status(changeset), do: changeset
 
-  defp expected_user_keys() do
+  defp expected_user_keys do
     Map.keys(%User{})
     |> Enum.filter(&(Enum.member?(@auto_generated_keys, &1) == false))
   end
@@ -119,7 +131,7 @@ defmodule Bankr.Accounts.User do
   defp generate_referral_code(
          %Ecto.Changeset{valid?: true, changes: %{registration_status: "completo"}} = changeset
        ) do
-    change(changeset, referral_code: Bankr.ReferralGen.random())
+    change(changeset, generated_rc: Bankr.ReferralGen.random())
   end
 
   defp generate_referral_code(changeset), do: changeset
