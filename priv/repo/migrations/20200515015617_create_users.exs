@@ -20,6 +20,6 @@ defmodule Bankr.Repo.Migrations.CreateUsers do
       timestamps(type: :utc_datetime, default: fragment("timezone('utc', now())"))
     end
 
-    #create unique_index(:users, [:cpf])
+    create unique_index(:users, [:cpf])
   end
 end

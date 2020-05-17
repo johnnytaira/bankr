@@ -4,9 +4,8 @@ defmodule Bankr.Hasher do
 
   """
 
-  @spec hash_string(String.t) :: String.t
+  @spec hash_string(String.t()) :: String.t()
   def hash_string(string) do
     :crypto.hash(:sha256, string) |> Base.encode64()
   end
-
 end

@@ -9,6 +9,11 @@ defmodule Bankr.Accounts do
   alias Bankr.Repo
   alias Ecto.Multi
 
+  # desconsiderar os campos referentes à referral_code porque eles serão inseridos depois na base e sempre seram null
+  @referral_code_fields ~w(registration_status generated_rc indication_rc)a
+  # desconsiderar os campos inseridos automaticamente porque não é informação que o usuário manda
+  @auto_generated_keys ~w(id inserted_at updated_at __meta__ __struct__)a
+
   @doc """
   Returns the list of users.
 
@@ -72,14 +77,10 @@ defmodule Bankr.Accounts do
 
   """
   def create_or_update_user(%{"cpf" => plain_cpf} = attrs) do
-    changeset =
-      user_changeset_by_cpf(plain_cpf, attrs)
-      |> check_valid_rc(attrs)
-
-    Multi.new()
-    |> register_user(changeset)
-    |> Repo.transaction()
-    |> return_latest_record()
+    user_changeset_by_cpf(plain_cpf, attrs)
+    |> check_valid_rc(attrs)
+    |> register_user()
+    |> update_user_status()
   end
 
   defp user_changeset_by_cpf(plain_cpf, attrs) do
@@ -109,29 +110,30 @@ defmodule Bankr.Accounts do
     changeset
   end
 
-  defp insert_indication(multi, %{valid?: true} = changeset, %{"referral_code" => _} = attrs) do
-    user = Repo.get_by(User, cpf_hash: changeset.changes.cpf_hash)
-
-    changeset = User.indication_changeset(user, attrs)
-    Multi.update(multi, :insert_indication, changeset)
+  defp register_user(changeset) do
+    Repo.insert_or_update(changeset)
   end
 
-  defp insert_indication(multi, _changeset, _attrs), do: multi
+  defp update_user_status({:error, _reason} = response), do: response
 
+  defp update_user_status({:ok, %User{} = user} = response) do
+    exclusion_fields = @auto_generated_keys ++ @referral_code_fields
 
-  defp register_user(multi, changeset) do
-    Multi.insert_or_update(multi, :insert_or_update_registration, changeset)
-  end
+    filled_fields =
+      user
+      |> Map.drop(exclusion_fields)
+      |> Map.values()
+      |> Enum.filter(&(is_nil(&1) == false))
 
-  defp return_latest_record({:ok, %{insert_indication: after_indication}}) do
-    {:ok, after_indication}
-  end
+    expected_user_keys = user |> Map.drop(exclusion_fields) |> Map.keys()
 
-  defp return_latest_record({:ok, %{insert_or_update_registration: without_indication}}) do
-    {:ok, without_indication}
-  end
+    case length(filled_fields) == length(expected_user_keys) do
+      true ->
+        User.complete_registration_changeset(user, %{"registration_status" => "completo"})
+        |> Repo.update()
 
-  defp return_latest_record({:error, _multi_name, reason, _}) do
-    {:error, reason}
+      false ->
+        response
+    end
   end
 end

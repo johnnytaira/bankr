@@ -1,10 +1,9 @@
 defmodule BankrWeb.SessionControllerTest do
-  #TODO
+  # TODO
   use BankrWeb.ConnCase
   import Brcpfcnpj, only: [cpf_generate: 0]
   alias Bankr.Accounts
   alias Bankr.Accounts.User
-
 
   @create_attrs %{
     "birth_date" => "2010-04-17",
@@ -24,8 +23,13 @@ defmodule BankrWeb.SessionControllerTest do
 
   describe "login" do
     setup [:create_user]
+
     test "is successful", %{conn: conn} = context do
-      conn = post(conn, Routes.session_path(conn, :login), %{"cpf" => @create_attrs["cpf"], "password" => @create_attrs["password"]})
+      conn =
+        post(conn, Routes.session_path(conn, :login), %{
+          "cpf" => @create_attrs["cpf"],
+          "password" => @create_attrs["password"]
+        })
 
       assert json_response(conn, 200)
     end
@@ -36,5 +40,4 @@ defmodule BankrWeb.SessionControllerTest do
 
     [user: user]
   end
-
 end

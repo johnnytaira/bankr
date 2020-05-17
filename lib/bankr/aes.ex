@@ -1,18 +1,19 @@
 defmodule Bankr.AES do
-  @aad "AES256GCM" # Use AES 256 Bit Keys for Encryption.
+  @moduledoc """
+  Contém funções que fazem o encrypt e decrypt dos campos que devem ser criptografados.
+  Baseado no seguinte tutorial: https://github.com/dwyl/phoenix-ecto-encryption-example
+  Thanks to dwyl
+  """
+  @aad "AES256GCM"
 
   @spec encrypt(String.t()) :: binary
   def encrypt(plaintext) do
     iv = :crypto.strong_rand_bytes(16)
-    # get latest key
     key = get_key()
-    # get latest ID;
     key_id = get_key_id()
-    # {ciphertext, tag} = :crypto.block_encrypt(:aes_gcm, key, iv, {@aad, plaintext, 16})
     {ciphertext, tag} = :crypto.block_encrypt(:aes_gcm, key, iv, {@aad, to_string(plaintext), 16})
     iv <> tag <> <<key_id::unsigned-big-integer-32>> <> ciphertext
   end
-
 
   defp get_key do
     get_key_id() |> get_key
@@ -36,6 +37,4 @@ defmodule Bankr.AES do
 
     :crypto.block_decrypt(:aes_gcm, get_key(key_id), iv, {@aad, ciphertext, tag})
   end
-
-
 end

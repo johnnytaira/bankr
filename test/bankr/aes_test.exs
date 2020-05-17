@@ -15,7 +15,7 @@ defmodule Encryption.AESTest do
   end
 
   test "decrypt/1 ciphertext that was encrypted with default key" do
-    plaintext = "hello" |> AES.encrypt |> AES.decrypt()
+    plaintext = "hello" |> AES.encrypt() |> AES.decrypt()
     assert plaintext == "hello"
   end
 
@@ -25,9 +25,7 @@ defmodule Encryption.AESTest do
     original_keys = Application.get_env(:bankr, Bankr.AES)[:keys]
 
     # add a new key
-    Application.put_env(:bankr, Bankr.AES,
-      keys: original_keys ++ [:crypto.strong_rand_bytes(32)]
-    )
+    Application.put_env(:bankr, Bankr.AES, keys: original_keys ++ [:crypto.strong_rand_bytes(32)])
 
     assert "hello" == encrypted_value |> AES.decrypt()
 

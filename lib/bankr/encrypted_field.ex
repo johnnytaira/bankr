@@ -11,7 +11,7 @@ defmodule Bankr.EncryptedField do
   @behaviour Ecto.Type
   def type, do: :binary
 
-  @spec cast(binary) :: {:ok, String.t}
+  @spec cast(binary) :: {:ok, String.t()}
   def cast(value) do
     {:ok, to_string(value)}
   end

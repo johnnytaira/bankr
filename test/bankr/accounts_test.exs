@@ -66,7 +66,6 @@ defmodule Bankr.AccountsTest do
     test "create_or_update_user/1 with valid data and a referral code returns a user with status completo and a record in indication_rc" do
       assert {:ok, %User{generated_rc: generated_rc}} =
                Accounts.create_or_update_user(@valid_attrs)
-      IO.inspect "aqui"
 
       assert {:ok, %User{indication_rc: indication_rc} = expected} =
                Accounts.create_or_update_user(
@@ -78,22 +77,23 @@ defmodule Bankr.AccountsTest do
       assert generated_rc == indication_rc
     end
 
-    test "create_or_update_user/1 completed in two parts returns a user with status completo" do
-      assert {:ok, %User{cpf: cpf}} =
-        Accounts.create_or_update_user(@partial_valid_attrs)
-        new_attrs = %{
-          "city" => "São Paulo",
-          "country" => "Brasil",
-          "gender" => "male",
-          "name" => "A Name",
-          "state" => "SP",
-          "password" => "password",
-          "cpf" => cpf
-        }
+    test "create_or_update_user/1 completed in two parts returns a user with status completo and a referral_code" do
+      assert {:ok, %User{cpf: cpf}} = Accounts.create_or_update_user(@partial_valid_attrs)
 
-      assert {:ok, %User{registration_status: "completo"}} = Accounts.create_or_update_user(new_attrs)
+      new_attrs = %{
+        "city" => "São Paulo",
+        "country" => "Brasil",
+        "gender" => "male",
+        "name" => "A Name",
+        "state" => "SP",
+        "password" => "password",
+        "cpf" => cpf
+      }
 
+      assert {:ok, %User{registration_status: "completo"} = expected} =
+               Accounts.create_or_update_user(new_attrs)
 
+      assert is_binary(expected.generated_rc)
     end
 
     test "create_or_update_user/1 with valid data and a invalid referral code returns an error" do

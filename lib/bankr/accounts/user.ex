@@ -7,12 +7,7 @@ defmodule Bankr.Accounts.User do
   import Ecto.Changeset
   import Bankr.Hasher
   import Cpfcnpj, only: [valid?: 1]
-  alias Bankr.Accounts.User
 
-  #desconsiderar os campos referentes à referral_code porque eles serão inseridos depois na base e sempre seram null
-  @referral_code_fields ~w(registration_status generated_rc indication_rc)a
-  #desconsiderar os campos inseridos automaticamente porque não é informação que o usuário manda
-  @auto_generated_keys ~w(id inserted_at updated_at __meta__ __struct__)a
   @valid_genders ~w(male female other prefer_not_to_say)
 
   schema "users" do
@@ -34,7 +29,9 @@ defmodule Bankr.Accounts.User do
     timestamps()
   end
 
-  @doc false
+  @doc """
+  Changeset para quando o usuário tiver um código de indicação válido. Somente será chamado se o referral_code estiver explícito no parâmetro da requisição.
+  """
   def indication_changeset(user, %{"referral_code" => generated_rc}) do
     user
     |> cast(%{"indication_rc" => generated_rc}, [:indication_rc])
@@ -42,6 +39,15 @@ defmodule Bankr.Accounts.User do
 
   def indication_changeset(user, _attrs) do
     user
+  end
+
+  @doc """
+  Changeset para a conclusão do registro. Será chamado quando o usuário conseguir preencher todos os campos. Gera um código de indicação.
+  """
+  def complete_registration_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:registration_status])
+    |> generate_referral_code()
   end
 
   @required ~w(cpf)a
@@ -53,12 +59,11 @@ defmodule Bankr.Accounts.User do
     |> deny_user_input_status()
     |> validate_required(@required)
     |> validate_inclusion(:gender, @valid_genders)
+    |> unique_constraint(:cpf)
     |> put_cpf()
     |> put_password()
     |> put_birth_date()
     |> validate_format(:email, ~r/(\w+)@(\w+)\.(\w)/)
-    |> put_status()
-    |> generate_referral_code()
   end
 
   defp deny_user_input_status(
@@ -81,7 +86,8 @@ defmodule Bankr.Accounts.User do
           false -> [cpf: "invalid"]
         end
       end
-    )|> change(%{cpf_hash: hash_string(cpf)})
+    )
+    |> change(%{cpf_hash: hash_string(cpf)})
   end
 
   defp put_cpf(changeset), do: changeset
@@ -102,31 +108,6 @@ defmodule Bankr.Accounts.User do
   end
 
   defp put_birth_date(changeset), do: changeset
-
-  defp put_status(%{changes: changes, valid?: true} = changeset) do
-    filled_fields =
-      changes
-      |> Map.values()
-      |> Enum.filter(&(is_nil(&1) == false))
-
-    case length(filled_fields) == length(expected_user_keys()) do
-      true ->
-        change(changeset, registration_status: "completo")
-
-      false ->
-        changeset
-    end
-  end
-
-  defp put_status(changeset), do: changeset
-
-  defp expected_user_keys do
-
-    exclusion_fields = @auto_generated_keys ++ @referral_code_fields
-
-    Map.keys(%User{})
-    |> Enum.filter(&(Enum.member?(exclusion_fields, &1) == false))
-  end
 
   defp generate_referral_code(
          %Ecto.Changeset{valid?: true, changes: %{registration_status: "completo"}} = changeset
