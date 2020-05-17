@@ -13,4 +13,8 @@ defmodule BankrWeb.ErrorView do
   def template_not_found(template, _assigns) do
     %{errors: %{detail: Phoenix.Controller.status_message_from_template(template)}}
   end
+
+  def render("401.json", _assigns) do
+    %{errors: %{detail: "invalid_credentials"}}
+  end
 end

@@ -5,21 +5,27 @@ defmodule Bankr.Accounts.User do
   """
   use Ecto.Schema
   import Ecto.Changeset
+  import Bankr.Hasher
   import Cpfcnpj, only: [valid?: 1]
   alias Bankr.Accounts.User
 
-  # Remove colunas que não são obrigatórias para garantir o cadastro completo.
-  @auto_generated_keys ~w(id registration_status generated_rc indication_rc __meta__ __struct__ inserted_at updated_at)a
+  #desconsiderar os campos referentes à referral_code porque eles serão inseridos depois na base e sempre seram null
+  @referral_code_fields ~w(registration_status generated_rc indication_rc)a
+  #desconsiderar os campos inseridos automaticamente porque não é informação que o usuário manda
+  @auto_generated_keys ~w(id inserted_at updated_at __meta__ __struct__)a
   @valid_genders ~w(male female other prefer_not_to_say)
 
   schema "users" do
     field :birth_date, :string
+    field :cpf, :string
+    field :cpf_hash, :string
+    field :email, :string
+    field :name, :string
+
     field :city, :string
     field :country, :string
-    field :cpf, :string
-    field :email, :string
     field :gender, :string
-    field :name, :string
+    field :password, :string
     field :state, :string
     field :registration_status, :string, default: "pendente"
     field :generated_rc, :string
@@ -39,7 +45,7 @@ defmodule Bankr.Accounts.User do
   end
 
   @required ~w(cpf)a
-  @optional ~w(name email birth_date gender city state country registration_status)a
+  @optional ~w(name email birth_date gender city state country registration_status password)a
   @doc false
   def changeset(user, attrs) do
     user
@@ -48,9 +54,9 @@ defmodule Bankr.Accounts.User do
     |> validate_required(@required)
     |> validate_inclusion(:gender, @valid_genders)
     |> put_cpf()
+    |> put_password()
     |> put_birth_date()
-    |> put_name()
-    |> put_email()
+    |> validate_format(:email, ~r/(\w+)@(\w+)\.(\w)/)
     |> put_status()
     |> generate_referral_code()
   end
@@ -75,36 +81,27 @@ defmodule Bankr.Accounts.User do
           false -> [cpf: "invalid"]
         end
       end
-    )
-    |> change(cpf: Bcrypt.hash_pwd_salt(cpf))
+    )|> change(%{cpf_hash: hash_string(cpf)})
   end
 
   defp put_cpf(changeset), do: changeset
+
+  defp put_password(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
+    change(changeset, password: Bcrypt.hash_pwd_salt(password))
+  end
+
+  defp put_password(changeset), do: changeset
 
   defp put_birth_date(
          %Ecto.Changeset{valid?: true, changes: %{birth_date: birth_date}} = changeset
        ) do
     case Date.from_iso8601(birth_date) do
-      {:ok, _date} -> change(changeset, birth_date: Bcrypt.hash_pwd_salt(birth_date))
+      {:ok, _date} -> changeset
       {:error, _reason} -> add_error(changeset, :birth_date, "invalid_format")
     end
   end
 
   defp put_birth_date(changeset), do: changeset
-
-  defp put_email(%Ecto.Changeset{valid?: true, changes: %{email: email}} = changeset) do
-    changeset
-    |> validate_format(:email, ~r/(\w+)@(\w+)\.(\w)/)
-    |> change(email: Bcrypt.hash_pwd_salt(email))
-  end
-
-  defp put_email(changeset), do: changeset
-
-  defp put_name(%Ecto.Changeset{valid?: true, changes: %{name: name}} = changeset) do
-    change(changeset, name: Bcrypt.hash_pwd_salt(name))
-  end
-
-  defp put_name(changeset), do: changeset
 
   defp put_status(%{changes: changes, valid?: true} = changeset) do
     filled_fields =
@@ -124,8 +121,11 @@ defmodule Bankr.Accounts.User do
   defp put_status(changeset), do: changeset
 
   defp expected_user_keys do
+
+    exclusion_fields = @auto_generated_keys ++ @referral_code_fields
+
     Map.keys(%User{})
-    |> Enum.filter(&(Enum.member?(@auto_generated_keys, &1) == false))
+    |> Enum.filter(&(Enum.member?(exclusion_fields, &1) == false))
   end
 
   defp generate_referral_code(

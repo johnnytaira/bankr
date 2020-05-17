@@ -4,6 +4,7 @@ defmodule Bankr.Accounts do
   """
 
   import Ecto.Query, warn: false
+  import Bankr.Hasher
   alias Bankr.Accounts.User
   alias Bankr.Repo
   alias Ecto.Multi
@@ -37,6 +38,20 @@ defmodule Bankr.Accounts do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  def find_and_confirm_password(%{"cpf" => plain_cpf, "password" => password}) do
+    case get_user_by_cpf(plain_cpf) do
+      nil -> {:error, :unauthorized}
+      user -> check_password(user, password)
+    end
+  end
+
+  defp check_password(user, plain_password) do
+    case Bcrypt.check_pass(user, plain_password, hash_key: :password) do
+      {:ok, user} -> {:ok, user}
+      {:error, _reason} -> {:error, :unauthorized}
+    end
+  end
+
   @doc """
   Cria um usuário, caso o CPF não esteja cadastrado. Se o CPF não estiver cadastrado, atualiza.
 
@@ -63,7 +78,6 @@ defmodule Bankr.Accounts do
 
     Multi.new()
     |> register_user(changeset)
-    |> insert_indication(changeset, attrs)
     |> Repo.transaction()
     |> return_latest_record()
   end
@@ -78,16 +92,16 @@ defmodule Bankr.Accounts do
 
   @spec get_user_by_cpf(String.t()) :: struct | nil
   defp get_user_by_cpf(plain_cpf) do
-    hash_cpf = Bcrypt.hash_pwd_salt(plain_cpf)
-    Repo.get_by(User, cpf: hash_cpf)
+    cpf_hash = hash_string(plain_cpf)
+    Repo.get_by(User, cpf_hash: cpf_hash)
   end
 
-  defp check_valid_rc(changeset, %{"referral_code" => generated_rc}) do
+  defp check_valid_rc(changeset, %{"referral_code" => generated_rc} = attrs) do
     valid_indications = from u in User, where: u.generated_rc == ^generated_rc, select: count(u)
 
     case Repo.all(valid_indications) do
       [0] -> Ecto.Changeset.add_error(changeset, :indication_rc, "invalid")
-      _ -> changeset
+      _ -> User.indication_changeset(changeset, attrs)
     end
   end
 
@@ -95,9 +109,15 @@ defmodule Bankr.Accounts do
     changeset
   end
 
-  defp insert_indication(multi, user, attrs) do
-    Multi.insert(multi, :insert_indication, User.indication_changeset(user, attrs))
+  defp insert_indication(multi, %{valid?: true} = changeset, %{"referral_code" => _} = attrs) do
+    user = Repo.get_by(User, cpf_hash: changeset.changes.cpf_hash)
+
+    changeset = User.indication_changeset(user, attrs)
+    Multi.update(multi, :insert_indication, changeset)
   end
+
+  defp insert_indication(multi, _changeset, _attrs), do: multi
+
 
   defp register_user(multi, changeset) do
     Multi.insert_or_update(multi, :insert_or_update_registration, changeset)

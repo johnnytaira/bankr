@@ -13,7 +13,8 @@ defmodule BankrWeb.UserControllerTest do
     "email" => "valid@email.com",
     "gender" => "male",
     "name" => "A Name",
-    "state" => "SP"
+    "state" => "SP",
+    "password" => "123456"
   }
 
   setup %{conn: conn} do
