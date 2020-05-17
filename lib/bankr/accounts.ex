@@ -40,6 +40,7 @@ defmodule Bankr.Accounts do
   @doc """
   Cria um usuário, caso o CPF não esteja cadastrado. Se o CPF não estiver cadastrado, atualiza.
 
+
   ## Examples
 
       iex> create_or_update_user(%{"cpf" => Cpfcnpj.generate()})

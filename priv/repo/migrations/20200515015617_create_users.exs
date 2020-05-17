@@ -11,6 +11,7 @@ defmodule Bankr.Repo.Migrations.CreateUsers do
       add :city, :string
       add :state, :string
       add :country, :string
+      add :registration_status, :string, default: "pendente"
 
       timestamps()
     end
