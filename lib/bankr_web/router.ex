@@ -7,5 +7,6 @@ defmodule BankrWeb.Router do
 
   scope "/api", BankrWeb do
     pipe_through :api
+    resources "/registration", UserController, only: [:create, :show]
   end
 end

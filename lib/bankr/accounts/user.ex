@@ -4,7 +4,7 @@ defmodule Bankr.Accounts.User do
   import Cpfcnpj, only: [valid?: 1]
   alias Bankr.Accounts.User
 
-  @auto_generated_keys ~w(id registration_status __meta__ __struct__ inserted_at updated_at)a
+  @auto_generated_keys ~w(id registration_status referral_code __meta__ __struct__ inserted_at updated_at)a
   @valid_genders ~w(male female other prefer_not_to_say)
 
   schema "users" do
@@ -17,6 +17,7 @@ defmodule Bankr.Accounts.User do
     field :name, :string
     field :state, :string
     field :registration_status, :string, default: "pendente"
+    field :referral_code, :string
 
     timestamps()
   end
@@ -36,6 +37,7 @@ defmodule Bankr.Accounts.User do
     |> put_name()
     |> put_email()
     |> put_status()
+    |> generate_referral_code()
   end
 
   defp deny_user_input_status(
@@ -107,4 +109,12 @@ defmodule Bankr.Accounts.User do
     Map.keys(%User{})
     |> Enum.filter(&(Enum.member?(@auto_generated_keys, &1) == false))
   end
+
+  defp generate_referral_code(
+         %Ecto.Changeset{valid?: true, changes: %{registration_status: "completo"}} = changeset
+       ) do
+    change(changeset, referral_code: Bankr.ReferralGen.random())
+  end
+
+  defp generate_referral_code(changeset), do: changeset
 end

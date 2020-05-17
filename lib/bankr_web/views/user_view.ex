@@ -21,7 +21,7 @@ defmodule BankrWeb.UserView do
       city: user.city,
       state: user.state,
       country: user.country,
-      referral_code: user.referral_code
+      registration_status: user.registration_status
     }
   end
 end

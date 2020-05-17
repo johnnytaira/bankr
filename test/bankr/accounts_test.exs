@@ -16,7 +16,8 @@ defmodule Bankr.AccountsTest do
       "email" => "valid@email.com",
       "gender" => "male",
       "name" => "A Name",
-      "state" => "SP"
+      "state" => "SP",
+      "referral_code" => "12345678"
     }
 
     @partial_valid_attrs %{
@@ -47,6 +48,7 @@ defmodule Bankr.AccountsTest do
       assert expected.gender == @valid_attrs["gender"]
       assert expected.state == @valid_attrs["state"]
       assert expected.registration_status == "completo"
+      assert is_binary(expected.referral_code)
     end
 
     test "create_or_update_user/1 with valid and incomplete data creates a user with status 'pendente'" do

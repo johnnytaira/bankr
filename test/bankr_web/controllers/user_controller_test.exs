@@ -1,47 +1,44 @@
 defmodule BankrWeb.UserControllerTest do
   use BankrWeb.ConnCase
+  import Brcpfcnpj, only: [cpf_generate: 0]
 
   alias Bankr.Accounts
   alias Bankr.Accounts.User
 
   @create_attrs %{
-    birth_date: ~D[2010-04-17],
-    city: "some city",
-    country: "some country",
-    cpf: "some cpf",
-    email: "some email",
-    gender: "some gender",
-    name: "some name",
-    referral_code: "some referral_code",
-    state: "some state"
-  }
-  @update_attrs %{
-    birth_date: ~D[2011-05-18],
-    city: "some updated city",
-    country: "some updated country",
-    cpf: "some updated cpf",
-    email: "some updated email",
-    gender: "some updated gender",
-    name: "some updated name",
-    referral_code: "some updated referral_code",
-    state: "some updated state"
-  }
-  @invalid_attrs %{
-    birth_date: nil,
-    city: nil,
-    country: nil,
-    cpf: nil,
-    email: nil,
-    gender: nil,
-    name: nil,
-    referral_code: nil,
-    state: nil
+    "birth_date" => "2010-04-17",
+    "city" => "São Paulo",
+    "country" => "Brasil",
+    "cpf" => cpf_generate(),
+    "email" => "valid@email.com",
+    "gender" => "male",
+    "name" => "A Name",
+    "state" => "SP"
   }
 
-  def fixture(:user) do
-    {:ok, user} = Accounts.create_user(@create_attrs)
-    user
-  end
+  # @update_attrs %{
+  #   "data":{
+  #     "birth_date": "2010-04-17",
+  #     "city": "São Paulo",
+  #     "country": "Brasil",
+  #     "cpf": "32432018028",
+  #     "email": "valid@email.com",
+  #     "gender": "male",
+  #     "name": "A Name",
+  #     "state": "SP"
+  #   }
+  # }
+  # @invalid_attrs %{
+  #   birth_date: nil,
+  #   city: nil,
+  #   country: nil,
+  #   cpf: nil,
+  #   email: nil,
+  #   gender: nil,
+  #   name: nil,
+  #   referral_code: nil,
+  #   state: nil
+  # }
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -49,33 +46,17 @@ defmodule BankrWeb.UserControllerTest do
 
   describe "create user" do
     test "renders user when data is valid", %{conn: conn} do
-      conn = post(conn, Routes.user_path(conn, :create), user: @create_attrs)
+      conn = post(conn, Routes.user_path(conn, :create), data: @create_attrs)
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = get(conn, Routes.user_path(conn, :show, id))
 
-      assert %{
-               "id" => id,
-               "birth_date" => "2010-04-17",
-               "city" => "some city",
-               "country" => "some country",
-               "cpf" => "some cpf",
-               "email" => "some email",
-               "gender" => "some gender",
-               "name" => "some name",
-               "referral_code" => "some referral_code",
-               "state" => "some state"
-             } = json_response(conn, 200)["data"]
+      assert json_response(conn, 200)
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post(conn, Routes.user_path(conn, :create), user: @invalid_attrs)
+      conn = post(conn, Routes.user_path(conn, :create), data: %{"cpf" => "103"})
       assert json_response(conn, 422)["errors"] != %{}
     end
-  end
-
-  defp create_user(_) do
-    user = fixture(:user)
-    {:ok, user: user}
   end
 end
