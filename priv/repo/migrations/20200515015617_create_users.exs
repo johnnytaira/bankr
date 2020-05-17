@@ -13,6 +13,7 @@ defmodule Bankr.Repo.Migrations.CreateUsers do
       add :country, :string
       add :registration_status, :string, default: "pendente"
       add :referral_code, :string, size: 8
+      add :indication_referral_code, :string, size: 8
 
       timestamps()
     end

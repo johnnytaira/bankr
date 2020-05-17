@@ -16,8 +16,18 @@ defmodule Bankr.AccountsTest do
       "email" => "valid@email.com",
       "gender" => "male",
       "name" => "A Name",
-      "state" => "SP",
-      "referral_code" => "12345678"
+      "state" => "SP"
+    }
+
+    @valid_indication_attrs %{
+      "birth_date" => "2010-04-17",
+      "city" => "São Paulo",
+      "country" => "Brasil",
+      "cpf" => cpf_generate(),
+      "email" => "valid2@email.com",
+      "gender" => "male",
+      "name" => "A Name",
+      "state" => "SP"
     }
 
     @partial_valid_attrs %{
@@ -49,6 +59,21 @@ defmodule Bankr.AccountsTest do
       assert expected.state == @valid_attrs["state"]
       assert expected.registration_status == "completo"
       assert is_binary(expected.referral_code)
+      assert String.length(expected.referral_code) == 8
+    end
+
+    test "create_or_update_user/1 with valid data and a referral code returns a user with status completo and a record in indication_referral_code" do
+      assert {:ok, %User{referral_code: referral_code}} =
+               Accounts.create_or_update_user(@valid_attrs)
+
+      assert {:ok, %User{indication_referral_code: indication_referral_code} = expected} =
+               Accounts.create_or_update_user(
+                 @valid_indication_attrs
+                 |> Map.put("referral_code", referral_code)
+               )
+
+      assert String.length(indication_referral_code) == 8
+      assert referral_code == indication_referral_code
     end
 
     test "create_or_update_user/1 with valid and incomplete data creates a user with status 'pendente'" do

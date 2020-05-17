@@ -16,30 +16,6 @@ defmodule BankrWeb.UserControllerTest do
     "state" => "SP"
   }
 
-  # @update_attrs %{
-  #   "data":{
-  #     "birth_date": "2010-04-17",
-  #     "city": "São Paulo",
-  #     "country": "Brasil",
-  #     "cpf": "32432018028",
-  #     "email": "valid@email.com",
-  #     "gender": "male",
-  #     "name": "A Name",
-  #     "state": "SP"
-  #   }
-  # }
-  # @invalid_attrs %{
-  #   birth_date: nil,
-  #   city: nil,
-  #   country: nil,
-  #   cpf: nil,
-  #   email: nil,
-  #   gender: nil,
-  #   name: nil,
-  #   referral_code: nil,
-  #   state: nil
-  # }
-
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
@@ -51,7 +27,9 @@ defmodule BankrWeb.UserControllerTest do
 
       conn = get(conn, Routes.user_path(conn, :show, id))
 
-      assert json_response(conn, 200)
+      assert %{"data" => %{"referral_code" => referral_code}} = json_response(conn, 200)
+      assert String.length(referral_code) == 8
+      assert is_binary(referral_code)
     end
 
     test "renders errors when data is invalid", %{conn: conn} do

@@ -4,7 +4,7 @@ defmodule Bankr.Accounts.User do
   import Cpfcnpj, only: [valid?: 1]
   alias Bankr.Accounts.User
 
-  @auto_generated_keys ~w(id registration_status referral_code __meta__ __struct__ inserted_at updated_at)a
+  @auto_generated_keys ~w(id registration_status referral_code indication_referral_code __meta__ __struct__ inserted_at updated_at)a
   @valid_genders ~w(male female other prefer_not_to_say)
 
   schema "users" do
@@ -18,11 +18,17 @@ defmodule Bankr.Accounts.User do
     field :state, :string
     field :registration_status, :string, default: "pendente"
     field :referral_code, :string
+    field :indication_referral_code, :string
 
     timestamps()
   end
 
   @doc false
+
+  def indication_changeset(user, %{"referral_code" => referral_code}) do
+    user
+    |> cast(%{"indication_referral_code" => referral_code}, [:indication_referral_code])
+  end
 
   @required ~w(cpf)a
   @optional ~w(name email birth_date gender city state country registration_status)a

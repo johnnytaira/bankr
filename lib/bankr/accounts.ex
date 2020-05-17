@@ -5,7 +5,7 @@ defmodule Bankr.Accounts do
 
   import Ecto.Query, warn: false
   alias Bankr.Repo
-
+  alias Ecto.Multi
   alias Bankr.Accounts.User
 
   @doc """
@@ -40,7 +40,13 @@ defmodule Bankr.Accounts do
   @doc """
   Cria um usuário, caso o CPF não esteja cadastrado. Se o CPF não estiver cadastrado, atualiza.
 
+  A validação dos campos (CPF, data de nascimento, gênero e email) é feita no Bankr.Accounts.User.changeset/2
 
+  Se o código de indicação que o usuário manda não for válido, o mesmo não será salvo.
+
+  Após a criação do usuário, se todos os campos estiverem preenchidos, é feito o processo de geração do código de indicação
+
+  O retorno será o resultado do Multi mais recente.
   ## Examples
 
       iex> create_or_update_user(%{"cpf" => Cpfcnpj.generate()})
@@ -51,33 +57,55 @@ defmodule Bankr.Accounts do
 
   """
   def create_or_update_user(%{"cpf" => plain_cpf} = attrs) do
+    changeset = user_changeset_by_cpf(plain_cpf, attrs)
+
+    Multi.new()
+    |> register_user(changeset)
+    |> insert_indication(changeset, attrs)
+    |> Repo.transaction()
+    |> return_latest_record()
+  end
+
+  defp user_changeset_by_cpf(plain_cpf, attrs) do
     case get_user_by_cpf(plain_cpf) do
       nil -> %User{}
       user -> user
     end
     |> User.changeset(attrs)
-    |> Repo.insert_or_update()
-  end
-
-  @doc """
-  Deletes a user.
-
-  ## Examples
-
-      iex> delete_user(user)
-      {:ok, %User{}}
-
-      iex> delete_user(user)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_user(%User{} = user) do
-    Repo.delete(user)
   end
 
   @spec get_user_by_cpf(String.t()) :: struct | nil
   defp get_user_by_cpf(plain_cpf) do
     hash_cpf = Bcrypt.hash_pwd_salt(plain_cpf)
     Repo.get_by(User, cpf: hash_cpf)
+  end
+
+  defp insert_indication(multi, user, %{"referral_code" => referral_code} = attrs) do
+    valid_indications = from u in User, where: u.referral_code == ^referral_code, select: count(u)
+
+    case Repo.all(valid_indications) do
+      [0] -> multi
+      _ -> multi |> Multi.insert(:insert_indication, User.indication_changeset(user, attrs))
+    end
+  end
+
+  defp insert_indication(multi, _user, _attrs) do
+    multi
+  end
+
+  defp register_user(multi, changeset) do
+    Multi.insert_or_update(multi, :insert_or_update_registration, changeset)
+  end
+
+  defp return_latest_record({:ok, %{insert_indication: after_indication}}) do
+    {:ok, after_indication}
+  end
+
+  defp return_latest_record({:ok, %{insert_or_update_registration: without_indication}}) do
+    {:ok, without_indication}
+  end
+
+  defp return_latest_record({:error, _multi_name, reason, _}) do
+    {:error, reason}
   end
 end
