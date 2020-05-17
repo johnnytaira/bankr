@@ -25,6 +25,18 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+#Configures Guardian
+config :bankr, BankrWeb.Guardian,
+  issuer: "bankr",
+  secret_key: "iVsGaOgmEgnlN0ZIlU2xiMmTNYJngqolAzc928Y4wWcmyYXgXGjzovDEr3lP6uSk"
+
+# Set the Encryption Keys as an "Application Variable" accessible in aes.ex
+config :bankr, Bankr.AES,
+  keys: System.get_env("ENCRYPTION_KEYS") # get the ENCRYPTION_KEYS env variable
+    |> String.replace("'", "")  # remove single-quotes around key list in .env
+    |> String.split(",")        # split the CSV list of keys
+    |> Enum.map(fn key -> :base64.decode(key) end) # decode the key.
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
