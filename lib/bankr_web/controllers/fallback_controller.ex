@@ -33,4 +33,10 @@ defmodule BankrWeb.FallbackController do
     |> put_view(BankrWeb.ErrorView)
     |> render("403.json")
   end
+
+  def call(conn, {:error, _reason}) do
+    conn
+    |> put_status(:bad_request)
+    |> render(:"400")
+  end
 end
