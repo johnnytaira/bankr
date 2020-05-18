@@ -74,7 +74,7 @@ O usuário precisa estar devidamente logado para visualizar quem usou o código 
 
 ## Detalhes sobre a implementação
 
-O banco de dados utilizado para esta API é o PostgreSQL. Informações de nome, e-mail, data de nascimento e CPF estão criptografadas, utilizando funções da biblioteca erlang `:crypto`. As funções _wrapper_ foram baseadas do tutorial [Phoenix Ecto Encryption Example][https://github.com/dwyl/phoenix-ecto-encryption-example].
+O banco de dados utilizado para esta API é o PostgreSQL. Informações de nome, e-mail, data de nascimento e CPF estão criptografadas, utilizando funções da biblioteca erlang `:crypto`. As funções _wrapper_ foram baseadas do tutorial [Phoenix Ecto Encryption Example](https://github.com/dwyl/phoenix-ecto-encryption-example).
 
 As funções de criptografia dos dados são utilizadas no `type` `Bankr.EncryptedType`. Ele importa comportamentos de uma string, mas antes de salvar no banco o campo é convertido para binary e é criptografado e antes da visualização é descriptografado. 
 
