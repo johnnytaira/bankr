@@ -3,11 +3,17 @@ defmodule Bankr.Accounts.User do
   Model do usuário a ser registrado.
   As validações seguem os formatos convencionados em BankrWeb.UserController
   """
+  alias Bankr.Accounts.User
   alias Bankr.EncryptedField
   use Ecto.Schema
   import Ecto.Changeset
   import Bankr.Hasher
   import Cpfcnpj, only: [valid?: 1]
+
+  # desconsiderar os campos referentes à referral_code porque eles serão inseridos depois na base e sempre seram null
+  @referral_code_fields ~w(registration_status generated_rc indication_rc)a
+  # desconsiderar os campos inseridos automaticamente porque não é informação que o usuário manda
+  @auto_generated_keys ~w(id inserted_at updated_at __meta__ __struct__)a
 
   @valid_genders ~w(male female other prefer_not_to_say)
 
@@ -23,11 +29,38 @@ defmodule Bankr.Accounts.User do
     field :gender, :string
     field :password, :string
     field :state, :string
-    field :registration_status, :string, default: "pendente"
+    field :registration_status, :string, default: "pending"
     field :generated_rc, :string
     field :indication_rc, :string
 
     timestamps()
+  end
+
+  @exclusion_fields [@auto_generated_keys | @referral_code_fields]
+
+  @doc """
+  Verifica se todos os campos foram preenchidos (removendo os `@exclusion_fields`)
+
+  Retorna a quantidade de campos preenchidos.
+
+  """
+  @spec get_amount_filled_fields(%User{}) :: integer()
+  def get_amount_filled_fields(user) do
+    user
+    |> Map.drop(@exclusion_fields)
+    |> Map.values()
+    |> Enum.filter(&(is_nil(&1) == false))
+    |> length()
+  end
+
+  @doc """
+  Verifica quais são os campos esperados para preencher (removendo os `@exclusion_fields`)
+
+  Retorna a quantidade de campos esperados.
+  """
+  @spec get_expected_fields(%User{}) :: integer()
+  def get_expected_fields(user) do
+    user |> Map.drop(@exclusion_fields) |> Map.keys() |> length()
   end
 
   @doc """
@@ -111,7 +144,7 @@ defmodule Bankr.Accounts.User do
   defp put_birth_date(changeset), do: changeset
 
   defp generate_referral_code(
-         %Ecto.Changeset{valid?: true, changes: %{registration_status: "completo"}} = changeset
+         %Ecto.Changeset{valid?: true, changes: %{registration_status: "completed"}} = changeset
        ) do
     change(changeset, generated_rc: Bankr.ReferralGen.random())
   end

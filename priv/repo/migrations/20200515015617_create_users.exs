@@ -12,7 +12,7 @@ defmodule Bankr.Repo.Migrations.CreateUsers do
       add :city, :string
       add :state, :string
       add :country, :string
-      add :registration_status, :string, default: "pendente"
+      add :registration_status, :string, default: "pending"
       add :generated_rc, :string, size: 8
       add :indication_rc, :string, size: 8
       add :password, :string

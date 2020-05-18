@@ -1,17 +1,12 @@
 defmodule Bankr.Accounts do
   @moduledoc """
-  The Accounts context.
+  Contexto de Accounts.
   """
 
   import Ecto.Query, warn: false
   import Bankr.Hasher
   alias Bankr.Accounts.User
   alias Bankr.Repo
-
-  # desconsiderar os campos referentes à referral_code porque eles serão inseridos depois na base e sempre seram null
-  @referral_code_fields ~w(registration_status generated_rc indication_rc)a
-  # desconsiderar os campos inseridos automaticamente porque não é informação que o usuário manda
-  @auto_generated_keys ~w(id inserted_at updated_at __meta__ __struct__)a
 
   @doc """
   Retorna um usuário, dado um id.
@@ -45,6 +40,7 @@ defmodule Bankr.Accounts do
     end
   end
 
+  @spec check_password(%User{}, String.t()) :: {:ok, %User{}} | {:error, :unauthorized}
   defp check_password(user, plain_password) do
     case Bcrypt.check_pass(user, plain_password, hash_key: :password) do
       {:ok, user} -> {:ok, user}
@@ -75,7 +71,7 @@ defmodule Bankr.Accounts do
     user_changeset_by_cpf(plain_cpf, attrs)
     |> check_valid_rc(attrs)
     |> register_user()
-    |> update_user_status()
+    |> maybe_update_user_status()
   end
 
   defp user_changeset_by_cpf(plain_cpf, attrs) do
@@ -111,23 +107,17 @@ defmodule Bankr.Accounts do
     Repo.insert_or_update(changeset)
   end
 
-  defp update_user_status({:error, _reason} = response), do: response
+  defp maybe_update_user_status({:error, _reason} = response), do: response
 
-  @spec update_user_status(tuple) :: tuple
-  defp update_user_status({:ok, %User{} = user} = response) do
-    exclusion_fields = @auto_generated_keys ++ @referral_code_fields
+  @spec maybe_update_user_status(tuple) :: tuple
+  defp maybe_update_user_status({:ok, %User{} = user} = response) do
+    filled_fields = User.get_amount_filled_fields(user)
 
-    filled_fields =
-      user
-      |> Map.drop(exclusion_fields)
-      |> Map.values()
-      |> Enum.filter(&(is_nil(&1) == false))
+    expected_user_keys = User.get_expected_fields(user)
 
-    expected_user_keys = user |> Map.drop(exclusion_fields) |> Map.keys()
-
-    case length(filled_fields) == length(expected_user_keys) do
+    case filled_fields == expected_user_keys do
       true ->
-        User.complete_registration_changeset(user, %{"registration_status" => "completo"})
+        User.complete_registration_changeset(user, %{"registration_status" => "completed"})
         |> Repo.update()
 
       false ->

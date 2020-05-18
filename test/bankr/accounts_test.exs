@@ -62,7 +62,7 @@ defmodule Bankr.AccountsTest do
   }
 
   describe "create_or_update_users" do
-    test "create_or_update_user/1 with valid data creates a user with status 'completo" do
+    test "create_or_update_user/1 with valid data creates a user with status 'completed" do
       assert {:ok, %User{} = expected} = Accounts.create_or_update_user(@valid_attrs)
 
       assert expected.birth_date == @valid_attrs["birth_date"]
@@ -73,12 +73,12 @@ defmodule Bankr.AccountsTest do
       assert expected.country == @valid_attrs["country"]
       assert expected.gender == @valid_attrs["gender"]
       assert expected.state == @valid_attrs["state"]
-      assert expected.registration_status == "completo"
+      assert expected.registration_status == "completed"
       assert is_binary(expected.generated_rc)
       assert String.length(expected.generated_rc) == 8
     end
 
-    test "create_or_update_user/1 with valid data and a referral code returns a user with status completo and a record in indication_rc" do
+    test "create_or_update_user/1 with valid data and a referral code returns a user with status completed and a record in indication_rc" do
       assert {:ok, %User{generated_rc: generated_rc}} =
                Accounts.create_or_update_user(@valid_attrs)
 
@@ -92,7 +92,7 @@ defmodule Bankr.AccountsTest do
       assert generated_rc == indication_rc
     end
 
-    test "create_or_update_user/1 completed in two parts returns a user with status completo and a referral_code" do
+    test "create_or_update_user/1 completed in two parts returns a user with status completed and a referral_code" do
       assert {:ok, %User{cpf: cpf}} = Accounts.create_or_update_user(@partial_valid_attrs)
 
       new_attrs = %{
@@ -105,7 +105,7 @@ defmodule Bankr.AccountsTest do
         "cpf" => cpf
       }
 
-      assert {:ok, %User{registration_status: "completo"} = expected} =
+      assert {:ok, %User{registration_status: "completed"} = expected} =
                Accounts.create_or_update_user(new_attrs)
 
       assert is_binary(expected.generated_rc)
@@ -121,13 +121,13 @@ defmodule Bankr.AccountsTest do
                )
     end
 
-    test "create_or_update_user/1 with valid and incomplete data creates a user with status 'pendente'" do
+    test "create_or_update_user/1 with valid and incomplete data creates a user with status 'pending'" do
       assert {:ok, %User{} = expected} = Accounts.create_or_update_user(@partial_valid_attrs)
 
       assert expected.email == @partial_valid_attrs["email"]
       assert expected.cpf == @partial_valid_attrs["cpf"]
       assert expected.birth_date == @partial_valid_attrs["birth_date"]
-      assert expected.registration_status == "pendente"
+      assert expected.registration_status == "pending"
     end
 
     test "create_or_update_user/1 with invalid birth date returns error changeset" do
@@ -165,14 +165,14 @@ defmodule Bankr.AccountsTest do
 
       assert expected.email == email
       assert Bankr.Repo.get_by(User, cpf_hash: Bankr.Hasher.hash_string(cpf)) == expected
-      assert expected.registration_status == "pendente"
+      assert expected.registration_status == "pending"
     end
 
     test "create_or_update_user/1 with registration_status in params returns error" do
       assert {:error, %Ecto.Changeset{}} =
                Accounts.create_or_update_user(%{
                  "cpf" => cpf_generate(),
-                 "registration_status" => "completo"
+                 "registration_status" => "completed"
                })
     end
   end
