@@ -15,6 +15,10 @@ defmodule BankrWeb.ErrorView do
   end
 
   def render("401.json", _assigns) do
-    %{errors: %{detail: "invalid_credentials"}}
+    %{error: %{detail: "invalid_credentials"}}
+  end
+
+  def render("403.json", _assigns) do
+    %{error: %{detail: "registration_not_completed"}}
   end
 end

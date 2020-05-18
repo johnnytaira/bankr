@@ -6,6 +6,12 @@ defmodule BankrWeb.UserController do
 
   action_fallback BankrWeb.FallbackController
 
+  plug Bodyguard.Plug.Authorize,
+    policy: BankrWeb.Policy,
+    action: {Phoenix.Controller, :action_name},
+    user: {Guardian.Plug, :current_resource},
+    fallback: BankrWeb.FallbackController
+
   @doc """
   Endpoint de registro do usuário. Para fazer um cadastro de usuário, é preciso informar pelo menos o número do CPF.
   Número do CPF precisa ser válido.
@@ -34,6 +40,13 @@ defmodule BankrWeb.UserController do
     }
   }
   ```
+
+  ## Exemplo de payload de erro:
+    {
+      "errors": {
+          "detail": "registration_not_completed"
+      }
+    }
   """
   def create(conn, %{"data" => user_params}) do
     with {:ok, %User{} = user} <- Accounts.create_or_update_user(user_params) do
@@ -50,11 +63,30 @@ defmodule BankrWeb.UserController do
   Somente usuários autenticados e com status de cadastro `completo` podem acessar o endpoint.
 
   Quando o usuário não estiver autenticado retorna código HTTP 401 e mensagem `unauthenticated`
-  Quando o usuário não completou o cadastro retorna código HTTP 401 e mensagem `registration_not_completed`
+  Quando o usuário não completou o cadastro retorna código HTTP 403 e mensagem `registration_not_completed`
+
+  ## Exemplo de retorno
+    ```
+        %{
+          "data" => [
+            %{
+              "id" => 1,
+              "name" => "José Amarildo"
+            },
+            %{
+              "id" => 2,
+              "name" => "Andreia Silva"
+            }
+          ]
+        }
+    ```
   """
   def list_user_referrals(conn, _params) do
-    user = Guardian.Plug.current_resource(conn)
-    send_resp(conn, 200, "hello")
+    users =
+      Guardian.Plug.current_resource(conn)
+      |> Accounts.list_user_referrals()
+
+    render(conn, "referrals.json", users: users)
   end
 
   def show(conn, %{"id" => id}) do

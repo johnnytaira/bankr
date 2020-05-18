@@ -2,8 +2,15 @@ defmodule BankrWeb.UserView do
   use BankrWeb, :view
   alias BankrWeb.UserView
 
-  def render("index.json", %{users: users}) do
-    %{data: render_many(users, UserView, "user.json")}
+  def render("referrals.json", %{users: users}) do
+    %{data: render_many(users, UserView, "referral.json")}
+  end
+
+  def render("referral.json", %{user: user}) do
+    %{
+      id: user.id,
+      name: user.name
+    }
   end
 
   def render("show.json", %{user: user}) do

@@ -45,7 +45,9 @@ defmodule Bankr.MixProject do
       {:brcpfcnpj, "~> 0.2.0"},
       {:entropy_string, "~> 1.3"},
       {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:guardian, "~> 2.0"}
+      {:guardian, "~> 2.0"},
+      {:faker, "~> 0.13", only: :test},
+      {:bodyguard, "~> 2.4"}
     ]
   end
 

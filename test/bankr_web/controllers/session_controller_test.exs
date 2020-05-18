@@ -43,19 +43,19 @@ defmodule BankrWeb.SessionControllerTest do
           "cpf" => @create_attrs["cpf"],
           "password" => "4352646337"
         })
+
       assert json_response(conn, 401)
     end
 
     test "fails with wrong cpf", %{conn: conn} do
       conn =
-        post(conn, Routes.session_path(conn, :login),%{
+        post(conn, Routes.session_path(conn, :login), %{
           "cpf" => "313123",
           "password" => @create_attrs["password"]
         })
+
       assert json_response(conn, 401)
     end
-
-
   end
 
   defp create_user(_context) do

@@ -26,4 +26,11 @@ defmodule BankrWeb.FallbackController do
     |> put_view(BankrWeb.ErrorView)
     |> render(:"404")
   end
+
+  def call(conn, {:error, :incomplete_registration}) do
+    conn
+    |> put_status(403)
+    |> put_view(BankrWeb.ErrorView)
+    |> render("403.json")
+  end
 end

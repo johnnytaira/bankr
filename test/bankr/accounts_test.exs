@@ -5,48 +5,63 @@ defmodule Bankr.AccountsTest do
   import Ecto.Query
   alias Bankr.Accounts
 
-  describe "users" do
-    alias Bankr.Accounts.User
+  alias Bankr.Accounts.User
 
-    @valid_attrs %{
-      "birth_date" => "2010-04-17",
-      "city" => "São Paulo",
-      "country" => "Brasil",
-      "cpf" => cpf_generate(),
-      "email" => "valid@email.com",
-      "gender" => "male",
-      "name" => "A Name",
-      "state" => "SP",
-      "password" => "password"
-    }
+  @partial_valid_attrs %{
+    "birth_date" => "2010-04-17",
+    "cpf" => cpf_generate(),
+    "email" => "valid@email.com"
+  }
 
-    @valid_indication_attrs %{
-      "birth_date" => "2010-04-17",
-      "city" => "São Paulo",
-      "country" => "Brasil",
-      "cpf" => cpf_generate(),
-      "email" => "valid2@email.com",
-      "gender" => "male",
-      "name" => "A Name",
-      "state" => "SP",
-      "password" => "password"
-    }
+  @valid_attrs %{
+    "birth_date" => "2010-04-17",
+    "city" => Faker.Address.city(),
+    "country" => Faker.Address.country(),
+    "cpf" => cpf_generate(),
+    "email" => Faker.Internet.free_email(),
+    "gender" => "male",
+    "name" => Faker.StarWars.En.character(),
+    "state" => Faker.Address.city_prefix(),
+    "password" => "password"
+  }
 
-    @partial_valid_attrs %{
-      "birth_date" => "2010-04-17",
-      "cpf" => cpf_generate(),
-      "email" => "valid@email.com"
-    }
+  @valid_indication_attrs %{
+    "birth_date" => "2010-04-17",
+    "city" => Faker.Address.city(),
+    "country" => Faker.Address.country(),
+    "cpf" => cpf_generate(),
+    "email" => Faker.Internet.free_email(),
+    "gender" => "other",
+    "name" => Faker.StarWars.En.character(),
+    "state" => Faker.Address.city_prefix(),
+    "password" => "password"
+  }
 
-    def user_fixture(attrs \\ %{}) do
-      {:ok, user} =
-        attrs
-        |> Enum.into(@valid_attrs)
-        |> Accounts.create_or_update_user()
+  @valid_second_indication_attrs %{
+    "birth_date" => "2000-04-17",
+    "city" => Faker.Address.city(),
+    "country" => Faker.Address.country(),
+    "cpf" => cpf_generate(),
+    "email" => Faker.Internet.free_email(),
+    "gender" => "female",
+    "name" => Faker.StarWars.En.character(),
+    "state" => Faker.Address.city_prefix(),
+    "password" => "password"
+  }
 
-      user
-    end
+  @valid_third_indication_attrs %{
+    "birth_date" => "2000-04-17",
+    "city" => Faker.Address.city(),
+    "country" => Faker.Address.country(),
+    "cpf" => cpf_generate(),
+    "email" => Faker.Internet.free_email(),
+    "gender" => "prefer_not_to_say",
+    "name" => Faker.StarWars.En.character(),
+    "state" => Faker.Address.city_prefix(),
+    "password" => "password"
+  }
 
+  describe "create_or_update_users" do
     test "create_or_update_user/1 with valid data creates a user with status 'completo" do
       assert {:ok, %User{} = expected} = Accounts.create_or_update_user(@valid_attrs)
 
@@ -160,5 +175,49 @@ defmodule Bankr.AccountsTest do
                  "registration_status" => "completo"
                })
     end
+  end
+
+  describe "list referrals" do
+    setup [:create_user, :create_referrals]
+
+    test "user with three referrals returns success", %{user: user} do
+      expected = Accounts.list_user_referrals(user)
+      assert is_list(expected)
+      assert length(expected) == 3
+
+      Enum.map(expected, fn user ->
+        assert not is_nil(Accounts.get_user!(user.id))
+        assert is_integer(user.id)
+        assert is_binary(user.name)
+      end)
+    end
+  end
+
+  defp create_user(_context) do
+    {:ok, user} = Accounts.create_or_update_user(@valid_attrs)
+
+    [user: user]
+  end
+
+  defp create_referrals(%{user: %{generated_rc: generated_rc}}) do
+    {:ok, %User{}} =
+      Accounts.create_or_update_user(
+        @valid_indication_attrs
+        |> Map.put("referral_code", generated_rc)
+      )
+
+    {:ok, %User{}} =
+      Accounts.create_or_update_user(
+        @valid_second_indication_attrs
+        |> Map.put("referral_code", generated_rc)
+      )
+
+    {:ok, %User{}} =
+      Accounts.create_or_update_user(
+        @valid_third_indication_attrs
+        |> Map.put("referral_code", generated_rc)
+      )
+
+    :ok
   end
 end

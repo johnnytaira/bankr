@@ -4,6 +4,14 @@ defmodule BankrWeb.UserControllerTest do
 
   alias Bankr.Accounts
   alias Bankr.Accounts.User
+  @password "password"
+
+  @partial_valid_attrs %{
+    "birth_date" => "2010-04-17",
+    "cpf" => cpf_generate(),
+    "email" => "valid@email.com",
+    "password" => @password
+  }
 
   @create_attrs %{
     "birth_date" => "2010-04-17",
@@ -14,7 +22,19 @@ defmodule BankrWeb.UserControllerTest do
     "gender" => "male",
     "name" => "A Name",
     "state" => "SP",
-    "password" => "123456"
+    "password" => @password
+  }
+
+  @valid_indication_attrs %{
+    "birth_date" => "2010-04-17",
+    "city" => Faker.Address.city(),
+    "country" => Faker.Address.country(),
+    "cpf" => cpf_generate(),
+    "email" => Faker.Internet.free_email(),
+    "gender" => "other",
+    "name" => Faker.StarWars.En.character(),
+    "state" => Faker.Address.city_prefix(),
+    "password" => @password
   }
 
   setup %{conn: conn} do
@@ -40,7 +60,7 @@ defmodule BankrWeb.UserControllerTest do
   end
 
   describe "list referrals when user is logged in" do
-    setup [:complete_register, :login]
+    setup [:complete_register, :login, :create_referral]
 
     test "is successful", %{conn: conn} do
       assert %{"data" => %{"token" => token}} = json_response(conn, 200)
@@ -51,7 +71,49 @@ defmodule BankrWeb.UserControllerTest do
         |> put_req_header("authorization", "bearer: " <> token)
         |> get(Routes.user_path(conn, :list_user_referrals))
 
-      assert conn.status == 200
+      assert %{"data" => expected} = json_response(conn, 200)
+
+      assert length(expected) == 1
+
+      Enum.map(expected, fn user ->
+        assert not is_nil(Accounts.get_user!(user["id"]))
+        assert is_integer(user["id"])
+        assert is_binary(user["name"])
+      end)
+    end
+  end
+
+  describe "list referrals when a user has any referrals" do
+    setup [:complete_register, :login]
+
+    test "returns a empty list", %{conn: conn} do
+      assert %{"data" => %{"token" => token}} = json_response(conn, 200)
+
+      conn =
+        conn
+        |> recycle()
+        |> put_req_header("authorization", "bearer: " <> token)
+        |> get(Routes.user_path(conn, :list_user_referrals))
+
+      assert %{"data" => expected} = json_response(conn, 200)
+
+      assert Enum.empty?(expected)
+    end
+  end
+
+  describe "list referrals when a pending user is logged in" do
+    setup [:partial_register, :login]
+
+    test "is forbidden", %{conn: conn} do
+      assert %{"data" => %{"token" => token}} = json_response(conn, 200)
+
+      conn =
+        conn
+        |> recycle()
+        |> put_req_header("authorization", "bearer: " <> token)
+        |> get(Routes.user_path(conn, :list_user_referrals))
+
+      assert expected = json_response(conn, 403)
     end
   end
 
@@ -61,11 +123,26 @@ defmodule BankrWeb.UserControllerTest do
     [user: user]
   end
 
+  defp partial_register(_context) do
+    {:ok, %User{} = user} = Bankr.Accounts.create_or_update_user(@partial_valid_attrs)
+
+    [user: user]
+  end
+
+  defp create_referral(%{user: user}) do
+    Bankr.Accounts.create_or_update_user(
+      @valid_indication_attrs
+      |> Map.put("referral_code", user.generated_rc)
+    )
+
+    :ok
+  end
+
   defp login(%{conn: conn, user: user}) do
     conn =
       post(conn, Routes.session_path(conn, :login), %{
         "cpf" => user.cpf,
-        "password" => @create_attrs["password"]
+        "password" => @password
       })
 
     [conn: conn]

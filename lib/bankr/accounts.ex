@@ -29,6 +29,14 @@ defmodule Bankr.Accounts do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  @spec list_user_referrals(%User{}) :: list()
+  def list_user_referrals(%User{generated_rc: generated_rc}) do
+    from(u in User)
+    |> where([u], u.indication_rc == ^generated_rc)
+    |> select([u], map(u, [:name, :id]))
+    |> Repo.all()
+  end
+
   @spec find_and_confirm_password(map) :: {:ok, %User{}} | {:error, :unauthorized}
   def find_and_confirm_password(%{"cpf" => plain_cpf, "password" => password}) do
     case get_user_by_cpf(plain_cpf) do
