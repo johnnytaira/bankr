@@ -44,11 +44,7 @@ defmodule BankrWeb.UserControllerTest do
   describe "create user" do
     test "renders user when data is valid", %{conn: conn} do
       conn = post(conn, Routes.user_path(conn, :create), data: @create_attrs)
-      assert %{"id" => id} = json_response(conn, 201)["data"]
-
-      conn = get(conn, Routes.user_path(conn, :show, id))
-
-      assert %{"data" => %{"generated_rc" => generated_rc}} = json_response(conn, 200)
+      assert %{"id" => id, "generated_rc" => generated_rc} = json_response(conn, 201)["data"]
       assert String.length(generated_rc) == 8
       assert is_binary(generated_rc)
     end
