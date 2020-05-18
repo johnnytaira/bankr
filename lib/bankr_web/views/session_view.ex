@@ -10,7 +10,7 @@ defmodule BankrWeb.SessionView do
         cpf: user.cpf
       },
       message:
-        "You are successfully logged in! Add this token to authorization header to make authorized requests."
+        "Logado com sucesso! Adicione o token no Authorization header para realizar requests autorizados."
     }
   end
 end

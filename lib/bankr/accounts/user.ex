@@ -3,6 +3,7 @@ defmodule Bankr.Accounts.User do
   Model do usuário a ser registrado.
   As validações seguem os formatos convencionados em BankrWeb.UserController
   """
+  alias Bankr.EncryptedField
   use Ecto.Schema
   import Ecto.Changeset
   import Bankr.Hasher
@@ -11,11 +12,11 @@ defmodule Bankr.Accounts.User do
   @valid_genders ~w(male female other prefer_not_to_say)
 
   schema "users" do
-    field :birth_date, :string
-    field :cpf, :string
+    field :birth_date, EncryptedField
+    field :cpf, EncryptedField
     field :cpf_hash, :string
-    field :email, :string
-    field :name, :string
+    field :email, EncryptedField
+    field :name, EncryptedField
 
     field :city, :string
     field :country, :string

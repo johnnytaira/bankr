@@ -164,7 +164,7 @@ defmodule Bankr.AccountsTest do
                Accounts.create_or_update_user(%{"cpf" => cpf, "email" => email})
 
       assert expected.email == email
-      assert Bankr.Repo.get_by(User, cpf: cpf) == expected
+      assert Bankr.Repo.get_by(User, cpf_hash: Bankr.Hasher.hash_string(cpf)) == expected
       assert expected.registration_status == "pendente"
     end
 

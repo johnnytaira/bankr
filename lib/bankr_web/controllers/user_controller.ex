@@ -65,6 +65,12 @@ defmodule BankrWeb.UserController do
   Quando o usuário não estiver autenticado retorna código HTTP 401 e mensagem `unauthenticated`
   Quando o usuário não completou o cadastro retorna código HTTP 403 e mensagem `registration_not_completed`
 
+  Para usar este endpoint, é preciso que o usuário faça login e utilizar o token do response
+  na autorização do endpoint. Adicione o token no `header` do request, seguindo o formato:
+  ```
+    Authorization: Bearer <token>
+  ```
+
   ## Exemplo de retorno
     ```
         %{

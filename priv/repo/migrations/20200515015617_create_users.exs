@@ -3,11 +3,11 @@ defmodule Bankr.Repo.Migrations.CreateUsers do
 
   def change do
     create table(:users) do
-      add :name, :string
-      add :email, :string
-      add :cpf, :string
+      add :name, :binary
+      add :email, :binary
+      add :cpf, :binary
       add :cpf_hash, :string
-      add :birth_date, :string
+      add :birth_date, :binary
       add :gender, :string
       add :city, :string
       add :state, :string
