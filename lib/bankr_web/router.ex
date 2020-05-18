@@ -6,7 +6,7 @@ defmodule BankrWeb.Router do
   end
 
   pipeline :authenticated do
-    plug Guardian.Plug.EnsureAuthenticated
+    plug BankrWeb.AuthPipeline
   end
 
   scope "/api", BankrWeb do
@@ -17,5 +17,6 @@ defmodule BankrWeb.Router do
 
   scope "/api/v1/", BankrWeb do
     pipe_through :authenticated
+    get "/referrals", UserController, :list_user_referrals
   end
 end

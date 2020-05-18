@@ -5,7 +5,6 @@ defmodule Bankr.Guardian do
   use Guardian, otp_app: :bankr
 
   def subject_for_token(resource, _claims) do
-
     sub = to_string(resource.id)
     {:ok, sub}
   end

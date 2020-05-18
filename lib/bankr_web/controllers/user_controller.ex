@@ -34,7 +34,6 @@ defmodule BankrWeb.UserController do
     }
   }
   ```
-
   """
   def create(conn, %{"data" => user_params}) do
     with {:ok, %User{} = user} <- Accounts.create_or_update_user(user_params) do
@@ -43,6 +42,19 @@ defmodule BankrWeb.UserController do
       |> put_resp_header("location", Routes.user_path(conn, :show, user))
       |> render("show.json", user: user)
     end
+  end
+
+  @doc """
+  Endpoint que retorna uma lista de indicações, contendo os ids do usuário que criaram a conta a partir do referral_code pós-cadastro.
+
+  Somente usuários autenticados e com status de cadastro `completo` podem acessar o endpoint.
+
+  Quando o usuário não estiver autenticado retorna código HTTP 401 e mensagem `unauthenticated`
+  Quando o usuário não completou o cadastro retorna código HTTP 401 e mensagem `registration_not_completed`
+  """
+  def list_user_referrals(conn, _params) do
+    user = Guardian.Plug.current_resource(conn)
+    send_resp(conn, 200, "hello")
   end
 
   def show(conn, %{"id" => id}) do

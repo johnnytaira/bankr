@@ -38,4 +38,36 @@ defmodule BankrWeb.UserControllerTest do
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
+
+  describe "list referrals when user is logged in" do
+    setup [:complete_register, :login]
+
+    test "is successful", %{conn: conn} do
+      assert %{"data" => %{"token" => token}} = json_response(conn, 200)
+
+      conn =
+        conn
+        |> recycle()
+        |> put_req_header("authorization", "bearer: " <> token)
+        |> get(Routes.user_path(conn, :list_user_referrals))
+
+      assert conn.status == 200
+    end
+  end
+
+  defp complete_register(_context) do
+    {:ok, %User{} = user} = Bankr.Accounts.create_or_update_user(@create_attrs)
+
+    [user: user]
+  end
+
+  defp login(%{conn: conn, user: user}) do
+    conn =
+      post(conn, Routes.session_path(conn, :login), %{
+        "cpf" => user.cpf,
+        "password" => @create_attrs["password"]
+      })
+
+    [conn: conn]
+  end
 end

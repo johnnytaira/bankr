@@ -2,7 +2,9 @@ defmodule Bankr.EncryptedField do
   @moduledoc """
   Baseado no tutorial: https://github.com/dwyl/phoenix-ecto-encryption-example
 
-  Implementa um novo tipo para o Ecto. No caso, EncryptedField é uma string que será armazenada como binary no banco e
+  Implementa um novo tipo para o Ecto, encriptando antes de salvar no banco e decriptando ao retornar para o usuário.
+
+  Utiliza funções documentadas em `Bankr.AES`
   """
 
   alias Bankr.AES

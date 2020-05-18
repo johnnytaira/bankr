@@ -24,7 +24,7 @@ defmodule BankrWeb.SessionControllerTest do
   describe "login" do
     setup [:create_user]
 
-    test "is successful", %{conn: conn} = context do
+    test "is successful", %{conn: conn} do
       conn =
         post(conn, Routes.session_path(conn, :login), %{
           "cpf" => @create_attrs["cpf"],
@@ -33,7 +33,7 @@ defmodule BankrWeb.SessionControllerTest do
 
       assert expected = json_response(conn, 200)
       assert expected["status"] == "ok"
-      assert expected["data"]["email"] == @create_attrs["email"]
+      assert expected["data"]["cpf"] == @create_attrs["cpf"]
       assert is_binary(expected["data"]["token"])
     end
   end
