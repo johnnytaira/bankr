@@ -52,7 +52,8 @@ O cadastro é feito a partir da rota `/api/register`, método `POST`
           "id": 1,
           "name": "A Name",
           "registration_status": "completed",
-          "state": "SP"
+          "state": "SP",
+          "password": "12345678"
       },
       "message": "Sucesso!"
   }
@@ -65,7 +66,7 @@ O login é feito a partir da rota `api/login`, método post.
 #### Parâmetros
 ```
   {
-    "cpf": "11111111111",
+    "cpf": "32432018028",
     "password": "12345678"
   }
 ```
