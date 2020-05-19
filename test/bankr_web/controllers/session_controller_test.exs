@@ -3,6 +3,7 @@ defmodule BankrWeb.SessionControllerTest do
   use BankrWeb.ConnCase
   import Brcpfcnpj, only: [cpf_generate: 0]
   alias Bankr.Accounts
+  alias Bankr.Accounts.User
 
   @create_attrs %{
     "birth_date" => "2010-04-17",

@@ -38,26 +38,6 @@ O cadastro é feito a partir da rota `/api/register`, método `POST`
   }
 ```
 
-### Exemplo de retorno
-```
-  {
-      "data": {
-          "birth_date": "2010-04-17",
-          "city": "São Paulo",
-          "country": "Brasil",
-          "cpf": "32432018028",
-          "email": "valid@email.com",
-          "gender": "male",
-          "generated_rc": "JHh2MLrd",
-          "id": 1,
-          "name": "A Name",
-          "registration_status": "completed",
-          "state": "SP"
-      },
-      "message": "Sucesso!"
-  }
-```
-
 ### Login
 
 O login é feito a partir da rota `api/login`, método post.
@@ -68,18 +48,6 @@ O login é feito a partir da rota `api/login`, método post.
     "cpf": "11111111111",
     "password": "12345678"
   }
-```
-
-#### Exemplo de retorno
-```
-{
-    "data": {
-        "cpf": "32432018028",
-        "token": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJiYW5rciIsImV4cCI6MTU5MjI2NzA0MSwiaWF0IjoxNTg5ODQ3ODQxLCJpc3MiOiJiYW5rciIsImp0aSI6IjNlNDVkMjFmLWIxZGEtNGZjYy1hOGM0LTBmOGYzNmY1NWFhMiIsIm5iZiI6MTU4OTg0Nzg0MCwic3ViIjoiMSIsInR5cCI6ImFjY2VzcyJ9.1fScPRPDRcVcYHEiunhkcGwBoG-Ophq3dNBdNO64IO9SbTOqDtp8Oz4ZYWgKQ6DKXhJBbK7tnGJPsOxdFUyq8Q"
-    },
-    "message": "Logado com sucesso! Adicione o token no Authorization header para realizar requests autorizados.",
-    "status": "ok"
-}
 ```
 
 Após o login, um token JWT é gerado e enviado na mensagem de retorno. O consumidor da API deve adicionar o token JWT na `Authorization header` das requisições autenticadas. O tipo da autorização é `Bearer`

@@ -14,7 +14,7 @@ defmodule BankrWeb.UserView do
   end
 
   def render("show.json", %{user: user}) do
-    %{data: render_one(user, UserView, "user.json"), message: "Sucesso!"}
+    %{data: render_one(user, UserView, "user.json"), message: "Cadastrado com sucesso!"}
   end
 
   def render("user.json", %{user: user}) do

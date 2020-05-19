@@ -1,6 +1,8 @@
 defmodule Bankr.AccountsTest do
   use Bankr.DataCase
   import Brcpfcnpj, only: [cpf_generate: 0]
+  import Bcrypt
+  import Ecto.Query
   alias Bankr.Accounts
 
   alias Bankr.Accounts.User
