@@ -38,7 +38,7 @@ O cadastro é feito a partir da rota `/api/register`, método `POST`
   }
 ```
 
-### Exemplo de retorno
+#### Exemplo de retorno
 ```
   {
       "data": {
