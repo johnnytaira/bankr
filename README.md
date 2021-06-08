@@ -1,28 +1,29 @@
 # Bankr
 
-Bankr é uma API de cadastro de contas bancárias, que contém também funcionalidade para visualização de indicações. 
+Bankr is a bank account registration and referral API.
 
-## Configuração local da API
+## Local setup
 
-A API foi feita utilizando o framework web Phoenix.Para rodar localmente, é preciso seguir os seguintes passos (conforme documentação oficial):
+This app is made with Phoenix. To run locally, you need to run these following steps:
 
 
-  * Instalar dependências com `mix deps.get`
-  * Configurar banco de dados com `mix ecto.setup`
-  * Instalar dependências e Node.js com `cd assets && npm install`
-  * Rodar localmente com `mix phx.server`
+  * Install deps with `mix deps.get`
+  * Configure database `mix ecto.setup`
+  * Install assets and Node.js `cd assets && npm install`
+  * Run locally with `mix phx.server`
 
-A API serve no endereço [`localhost:4000`](http://localhost:4000)
+The API is on [`localhost:4000`](http://localhost:4000)
 
-## Endpoints da API. 
+## API documentation. 
 
-O Bankr serve 3 endpoints:
+Bankr has 3 endpoints:
 
-### Cadastro
+### Registration
 
-O cadastro é feito a partir da rota `/api/register`, método `POST`
+Route: `/api/register`
+Method: `POST`
 
-#### Parâmetros (cadastro completo)
+#### Parameters (full registration)
 ```
  {
     "data":{
@@ -37,8 +38,7 @@ O cadastro é feito a partir da rota `/api/register`, método `POST`
     }
   }
 ```
-
-#### Exemplo de retorno
+#### Response
 ```
   {
       "data": {
@@ -61,9 +61,10 @@ O cadastro é feito a partir da rota `/api/register`, método `POST`
 
 ### Login
 
-O login é feito a partir da rota `api/login`, método post.
+Route: `api/login`
+Method: `POST`
 
-#### Parâmetros
+#### Parameters
 ```
   {
     "cpf": "32432018028",
@@ -71,7 +72,7 @@ O login é feito a partir da rota `api/login`, método post.
   }
 ```
 
-#### Exemplo de retorno
+#### Response
 ```
 {
     "data": {
@@ -83,13 +84,17 @@ O login é feito a partir da rota `api/login`, método post.
 }
 ```
 
-Após o login, um token JWT é gerado e enviado na mensagem de retorno. O consumidor da API deve adicionar o token JWT na `Authorization header` das requisições autenticadas. O tipo da autorização é `Bearer`
+A JWT token is generated after login and can be added on protected endpoints as an `Authorization header` (`Bearer token`)
 
-### Visualização de indicações 
+### Referrall list
 
-O usuário precisa estar devidamente logado para visualizar quem usou o código de indicação do seu cadastro. A rota está em `/api/v1/referrals`, método `GET`
+User must be logged in to see referred lists. 
 
-#### Exemplo de retorno
+Route: `/api/v1/referrals`
+Method: `GET`
+Authorization: `Bearer <token>`
+
+#### Response
 ```
   %{
     "data" => [
@@ -105,16 +110,11 @@ O usuário precisa estar devidamente logado para visualizar quem usou o código 
   }
 ```
 
-## Detalhes sobre a implementação
+## Implementation details
 
-O banco de dados utilizado para esta API é o PostgreSQL. Informações de nome, e-mail, data de nascimento e CPF estão criptografadas, utilizando funções da biblioteca erlang `:crypto`. As funções _wrapper_ foram baseadas do tutorial [Phoenix Ecto Encryption Example](https://github.com/dwyl/phoenix-ecto-encryption-example).
+This app has PostgreSQL database. Registration info such as `name`, `email`, `birth_date` and `cpf` are encrypted.
+The encryption layer was inspired on tutorial [Phoenix Ecto Encryption Example](https://github.com/dwyl/phoenix-ecto-encryption-example
 
-As funções de criptografia dos dados são utilizadas no `type` `Bankr.EncryptedType`. Ele importa comportamentos de uma string, mas antes de salvar no banco o campo é convertido para binary e é criptografado e antes da visualização é descriptografado. 
+`Guardian` and `Bcrypt` were chosen to login and API authentication flow.
 
-Para o login, utilizei a biblioteca `Guardian` para implementar o fluxo de autenticação e o `Bcrypt` para fazer o _hashing_ das senhas. 
-
-Para controle de acesso dos usuários logados (exemplo: visualização de indicações), eu utilizei a biblioteca `Bodyguard`, adicionando `Bodyguard.Plug` nos endpoints necessários.
-
-A geração de strings aleatórias é feita através da biblioteca `EntropyString`
-
-Nos testes, utilizei a biblioteca `Faker` para gerar informações randômicas sobre nome de cidade, e-mail e nome. A geração de CPFs válidos e sua validação é feita através do `Cpfcnpj`.
+`Bodyguard` controls authorization on logged users.
